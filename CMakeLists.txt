@@ -1,5 +1,3 @@
-# Warning! This is an automatically generated file!
-#
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 project(omron_fins LANGUAGES C)
@@ -15,5 +13,8 @@ if(NOT CMAKE_BUILD_TYPE)
     # Default to the release build
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "")
 endif(NOT CMAKE_BUILD_TYPE)
+
+# Disable variable tracking for generated analyzer code to avoid compilation slowdown
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-var-tracking-assignments")
 
 add_subdirectory(analyzer)
