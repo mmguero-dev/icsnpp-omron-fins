@@ -24,9 +24,9 @@ namespace OMRON_FINS_FUNCTIONS
             auto hex = hexstream.str();
             ss << (hex.length() < 2 ? '0' + hex : hex);
         }
-        return ss.str();
+        std::string result = ss.str();
+        return hilti::rt::String(std::string_view(result));
     }
 
 
 }
-
