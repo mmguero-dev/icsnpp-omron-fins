@@ -12,6 +12,9 @@ export {
     const omron_fins_ports_udp: set[port] = { 9600/udp } &redef;
     const omron_fins_ports_tcp: set[port] = { 9600/tcp } &redef;
 
+# Additional Romron Fins ports supplied through the environment.
+    global omron_fins_ports_str: string = getenv("ZEEK_OMRON_FINS_PORTS");
+
     redef enum Log::ID += { LOG_GENERAL_LOG, 
                             LOG_DETAIL_LOG, 
                             LOG_NETWORK_STATUS_READ_LOG,
@@ -72,6 +75,29 @@ event zeek_init() &priority=5 {
     Analyzer::register_for_ports(Analyzer::ANALYZER_OMRON_FINS_UDP, omron_fins_ports_udp);
     Analyzer::register_for_ports(Analyzer::ANALYZER_OMRON_FINS_TCP, omron_fins_ports_tcp);
 
+    if (omron_fins_ports_str != "") {
+        local omron_fins_custom_ports = split_string(omron_fins_ports_str, /,/);
+        local omron_fins_ports_tcp_custom: set[port] = {};
+        local omron_fins_ports_udp_custom: set[port] = {};
+        for (omron_fins_port_idx in omron_fins_custom_ports) {
+            local omron_fins_port = to_port(omron_fins_custom_ports[omron_fins_port_idx]);
+            local omron_fins_prot = get_port_transport_proto(omron_fins_port);
+            if (omron_fins_prot == tcp) {
+                add omron_fins_ports_tcp_custom[omron_fins_port];
+                }
+            else if (omron_fins_prot == udp) {
+                add omron_fins_ports_udp_custom[omron_fins_port];
+                }
+            }
+
+        if (|omron_fins_ports_tcp_custom| > 0) {
+            Analyzer::register_for_ports(Analyzer::ANALYZER_OMRON_FINS_TCP, omron_fins_ports_tcp_custom);
+            }
+
+        if (|omron_fins_ports_udp_custom| > 0) {
+            Analyzer::register_for_ports(Analyzer::ANALYZER_OMRON_FINS_UDP,omron_fins_ports_udp_custom);
+            }
+        }
 
     # initialize logging streams for all omron_fins logs
     Log::create_stream(OMRON_FINS::LOG_GENERAL_LOG,
@@ -162,3 +188,4 @@ function emit_omron_fins_file_log(c: connection) {
 function get_file_handle(c: connection, is_orig: bool): string {
     return cat(Analyzer::ANALYZER_OMRON_FINS_UDP, c$start_time, c$id, is_orig, c$orig);
 }
+
